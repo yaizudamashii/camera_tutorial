@@ -1,7 +1,6 @@
 import 'dart:ffi';
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:ffi/ffi.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
@@ -89,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Center(
         child: 
           (_cameraInitialized)
-          ? AspectRatio(aspectRatio: _camera.value.aspectRatio,
+          ? AspectRatio(aspectRatio: 1 / _camera.value.aspectRatio, // to handle _camera aspect ratio bug
             child: CameraPreview(_camera),)
           : CircularProgressIndicator()
       ),
@@ -99,9 +98,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
           if(Platform.isAndroid){
             // Allocate memory for the 3 planes of the image
-            Pointer<Uint8> p = allocate(count: _savedImage.planes[0].bytes.length);
-            Pointer<Uint8> p1 = allocate(count: _savedImage.planes[1].bytes.length);
-            Pointer<Uint8> p2 = allocate(count: _savedImage.planes[2].bytes.length);
+            Pointer<Uint8> p = malloc.allocate<Uint8>(_savedImage.planes[0].bytes.length);
+            Pointer<Uint8> p1 = malloc.allocate<Uint8>(_savedImage.planes[1].bytes.length);
+            Pointer<Uint8> p2 = malloc.allocate<Uint8>(_savedImage.planes[2].bytes.length);
 
             // Assign the planes data to the pointers of the image
             Uint8List pointerList = p.asTypedList(_savedImage.planes[0].bytes.length);
@@ -122,11 +121,11 @@ class _MyHomePageState extends State<MyHomePage> {
             
             // Free the memory space allocated
             // from the planes and the converted data
-            free(p);
-            free(p1);
-            free(p2);
-            free(imgP);
-          }else if(Platform.isIOS){
+            malloc.free(p);
+            malloc.free(p1);
+            malloc.free(p2);
+            malloc.free(imgP);
+          } else if(Platform.isIOS) {
             img = imglib.Image.fromBytes(
               _savedImage.planes[0].bytesPerRow,
               _savedImage.height,
